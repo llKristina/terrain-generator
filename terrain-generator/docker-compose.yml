@@ -5,8 +5,9 @@ services:
       dockerfile: Dockerfile.backend
     container_name: terrain_backend
     restart: always
+    env_file:
+    - .env
     environment:
-      - GEMINI_API_KEY=AQ.Ab8RN6KXBP3xI8sg38ESnOlPKr3JQGsN2uv5pP2CF0GFiO60Qw
       - DB_PATH=/app/data/users.db
     volumes:
       - db_data:/app/data

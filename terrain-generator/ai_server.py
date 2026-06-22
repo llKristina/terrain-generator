@@ -8,7 +8,6 @@ import sqlite3
 import jwt
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from openai import OpenAI
 import os
 
 DB_PATH = os.getenv("DB_PATH", "users.db")
@@ -38,11 +37,6 @@ def init_db():
 init_db()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-client = OpenAI(
-    base_url="https://api.groq.com/openai/v1",
-    api_key=GROQ_API_KEY
-)
 
 def call_gemini(prompt): 
     try:
@@ -385,7 +379,7 @@ octaves:
     print("FINAL:", params)
 
     return jsonify(params)
-    
+
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
