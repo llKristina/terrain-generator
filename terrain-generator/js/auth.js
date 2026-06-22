@@ -25,7 +25,7 @@ function showAppPage() {
 
     updateAccountPanel();
 
-    setTimeout(function() {
+    setTimeout(() => {
         if (typeof onWindowResize === 'function') onWindowResize();
     }, 100);
 }
@@ -80,23 +80,28 @@ async function registerUser() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/register`, {
+        const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: username, email: email, password: password })
+            body: JSON.stringify({
+                username,
+                email,
+                password
+            })
         });
 
         const result = await response.json();
 
-        if (result.success) {
-            authStatus.textContent = 'Регистрация прошла успешно. Теперь войдите в аккаунт.';
+        if (response.ok) {
+            authStatus.textContent = 'Регистрация успешна. Войдите в аккаунт.';
             showLoginForm();
         } else {
             authStatus.textContent = result.message || 'Ошибка регистрации';
         }
+
     } catch (error) {
-        authStatus.textContent = 'Не удалось подключиться к серверу';
         console.error(error);
+        authStatus.textContent = 'Не удалось подключиться к серверу';
     }
 }
 
@@ -107,15 +112,19 @@ async function loginUser() {
     const authStatus = document.getElementById('authStatus');
 
     if (!username || !email || !password) {
-        authStatus.textContent = 'Введите имя пользователя, email и пароль';
+        authStatus.textContent = 'Введите данные';
         return;
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/login`, {
+        const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ login: username, email: email, password: password })
+            body: JSON.stringify({
+                username,
+                email,
+                password
+            })
         });
 
         const result = await response.json();
@@ -123,20 +132,18 @@ async function loginUser() {
         if (response.ok && result.token) {
             setToken(result.token);
 
-            const user = result.user || {
-                username: username,
-                email: email
-            };
-
+            const user = result.user || { username, email };
             localStorage.setItem('user', JSON.stringify(user));
+
             authStatus.textContent = '';
             showAppPage();
         } else {
             authStatus.textContent = result.message || 'Ошибка входа';
         }
+
     } catch (error) {
-        authStatus.textContent = 'Не удалось подключиться к серверу';
         console.error(error);
+        authStatus.textContent = 'Не удалось подключиться к серверу';
     }
 }
 
@@ -168,7 +175,6 @@ function setupAuth() {
     const showRegisterBtn = document.getElementById('showRegisterBtn');
     const showLoginBtn = document.getElementById('showLoginBtn');
 
-    
     if (accountBtn) accountBtn.addEventListener('click', toggleAccountDropdown);
     if (accountLogoutBtn) accountLogoutBtn.addEventListener('click', logout);
     if (loginBtn) loginBtn.addEventListener('click', loginUser);
