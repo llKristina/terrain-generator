@@ -309,24 +309,31 @@ async function generateTerrainFromText() {
         const layoutHints = getLayoutHintsFromText(text);
         console.log('LAYOUT HINTS:', layoutHints);
 
-        const resolvedType = aiParams.type || aiParams.biome || 'hills';
+        const resolvedType =aiParams.type || aiParams.biome || 'hills';
 
         let finalParams = {
             type: resolvedType,
             biome: resolvedType,
+            height_scale: aiParams.height_scale !== undefined ? aiParams.height_scale : 0.7,
+            roughness: aiParams.roughness !== undefined ? aiParams.roughness : 0.6,
+            octaves: aiParams.octaves !== undefined ? aiParams.octaves : 4,
+            persistence: aiParams.persistence !== undefined ? aiParams.persistence : 0.5,
+            frequency: aiParams.frequency !== undefined ? aiParams.frequency : 0.04,
+            hasOasis: getOasisFromText(text),
+            hasWater: aiParams.hasWater === true ||
+                    aiParams.water_type === 'river' ||
+                    aiParams.water_type === 'lake' ||
+                    getOasisFromText(text),
 
-            frequency: aiParams.frequency ?? 0.04,
-            height_scale: aiParams.height_scale ?? 0.7,
-            roughness: aiParams.roughness ?? 0.5,
-            octaves: aiParams.octaves ?? 4,
-            persistence: aiParams.persistence ?? 0.5,
+            water_type: aiParams.water_type || 'none',
+            water_level: aiParams.water_level !== undefined ? aiParams.water_level : 0.5,
 
-            hasTrees: aiParams.hasTrees ?? false,
-            tree_density: aiParams.tree_density ?? 0,
+            tree_density: aiParams.tree_density !== undefined ? aiParams.tree_density : 0,
+            hasTrees: aiParams.hasTrees === true || (aiParams.tree_density || 0) > 0.1,
 
-            hasWater: aiParams.hasWater ?? false,
-            water_type: aiParams.water_type ?? "none",
-            water_level: aiParams.water_level ?? 0
+            mountain_count: getMountainCountFromText(text),
+
+            layoutHints: layoutHints
         };
 
         console.log('FINAL PARAMS:', finalParams);
