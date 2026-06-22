@@ -79,11 +79,6 @@ async function registerUser() {
         return;
     }
 
-    if (response.status === 400) {
-    authStatus.textContent = "Введите корректный email";
-    return;
-}
-
     try {
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
@@ -96,6 +91,11 @@ async function registerUser() {
         });
 
         const result = await response.json();
+
+        if (response.status === 400) {
+            authStatus.textContent = "Введите корректный email";
+            return;
+        }
 
         if (response.ok) {
             authStatus.textContent = 'Регистрация успешна. Войдите в аккаунт.';
