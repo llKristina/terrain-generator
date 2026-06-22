@@ -1,24 +1,32 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
 import json
 import re
 import random
 import sqlite3
 import jwt
 import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
 import os
+from openai import OpenAI
+from werkzeug.security import generate_password_hash, check_password_hash
 
 DB_PATH = os.getenv("DB_PATH", "users.db")
+SECRET_KEY = os.getenv("SECRET_KEY", "secret_key")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 app = Flask(__name__)
 CORS(app)
 
-SECRET_KEY = "secret_key"
+if not GROQ_API_KEY:
+    print("WARNING: GROQ_API_KEY не задан")
+
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=GROQ_API_KEY
+)
 
 def init_db():
-    sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -36,20 +44,18 @@ def init_db():
 
 init_db()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-def call_gemini(prompt): 
+def call_groq(prompt): 
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant", 
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "user", "content": prompt}
             ],
             response_format={"type": "json_object"},
-            temperature=0.1, 
+            temperature=0.1,
             timeout=30
         )
-        
+
         return response.choices[0].message.content
 
     except Exception as e:
@@ -333,11 +339,11 @@ octaves:
 {user_text}
 """
 
-    answer = call_gemini(prompt)
+    answer = call_groq(prompt)
     print("AI ответ:", answer[:500])
 
     if not answer or len(answer.strip()) < 10:
-        print("Using fallback (empty Gemini response)")
+        print("Using fallback (empty Groq response)")
         return jsonify(fallback_params(text_lower))
 
     try:
@@ -389,41 +395,46 @@ def register():
     password = data.get('password', '').strip()
 
     if not username or not email or not password:
-        return jsonify({'success': False}), 400
+        return jsonify({'success': False, 'message': 'Заполните все поля'}), 400
 
     password_hash = generate_password_hash(password)
     created_at = datetime.datetime.now().isoformat()
 
-    try:
-        sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
 
+    try:
         cursor.execute(
-            "INSERT INTO users VALUES (NULL, ?, ?, ?, ?)",
+            "INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
             (username, email, password_hash, created_at)
         )
 
         conn.commit()
-        conn.close()
 
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'message': 'Пользователь зарегистрирован'})
 
     except sqlite3.IntegrityError:
-        return jsonify({'success': False}), 409
+        return jsonify({'success': False, 'message': 'Пользователь с таким именем или email уже существует'}), 409
+
+    finally:
+        conn.close()
 
 
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
 
-    login_value = data.get('login', '')
-    password = data.get('password', '')
+    login_value = data.get('login', '').strip()
+    password = data.get('password', '').strip()
 
-    sqlite3.connect(DB_PATH)
+    if not login_value or not password:
+        return jsonify({'success': False, 'message': 'Введите логин и пароль'}), 400
+
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM users WHERE username=? OR email=?",
+        "SELECT id, username, email, password_hash FROM users WHERE username=? OR email=?",
         (login_value, login_value)
     )
 
@@ -436,7 +447,9 @@ def login():
             "message": "Пользователь не найден"
         }), 401
 
-    if not check_password_hash(user[3], password):
+    user_id, username, email, password_hash = user
+
+    if not check_password_hash(password_hash, password):
         return jsonify({
             "success": False,
             "message": "Неверный пароль"
@@ -444,7 +457,7 @@ def login():
 
     token = jwt.encode(
         {
-            "user_id": user[0],
+            "user_id": user_id,
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)
         },
         SECRET_KEY,
@@ -452,14 +465,14 @@ def login():
     )
 
     return jsonify({
-    "success": True,
-    "token": token,
-    "user": {
-        "id": user[0],
-        "username": user[1],
-        "email": user[2]
-    }
-})
+        "success": True,
+        "token": token,
+        "user": {
+            "id": user_id,
+            "username": username,
+            "email": email
+        }
+    })
 
 
 if __name__ == '__main__':
