@@ -266,10 +266,10 @@ def register():
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
     if not is_valid_email(email):
-    return jsonify({
-        "success": False,
-        "message": "Некорректный email"
-    }), 400
+        return jsonify({
+            "success": False,
+            "message": "Некорректный email"
+        }), 400
     
 
     if not username or not email or not password:
