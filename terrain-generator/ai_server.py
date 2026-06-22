@@ -10,7 +10,7 @@ import os
 from openai import OpenAI
 from werkzeug.security import generate_password_hash, check_password_hash
 
-DB_PATH = os.getenv("DB_PATH", "users.db")
+DB_PATH = os.getenv("DB_PATH", "/app/data/users.db")
 SECRET_KEY = os.getenv("SECRET_KEY", "secret_key")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
