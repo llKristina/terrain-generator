@@ -46,28 +46,46 @@ init_db()
 
 def call_groq(prompt):
     try:
+        print(">>> CALL GROQ START")
+
+        if not GROQ_API_KEY:
+            print("GROQ_API_KEY is EMPTY")
+            return ""
+
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.1,
+            temperature=0.2,  
             response_format={"type": "json_object"}
         )
 
         print("GROQ RAW RESPONSE:", response)
 
-        if not response.choices:
-            print("EMPTY CHOICES")
+        if not response.choices or not response.choices[0].message:
+            print(" EMPTY RESPONSE FROM GROQ")
             return ""
 
         content = response.choices[0].message.content
+
         print("GROQ CONTENT:", content)
+
+        if not content:
+            print(" EMPTY CONTENT")
+            return ""
+
+        try:
+            json.loads(content)
+        except Exception as e:
+            print(" INVALID JSON FROM GROQ:", e)
+            print("RAW:", content)
+            return ""
 
         return content
 
     except Exception as e:
-        print("GROQ ERROR:", repr(e))
+        print(" GROQ ERROR:", repr(e))
         return ""
 
 def fallback_params(text_lower):
