@@ -1,6 +1,5 @@
 let lastGeneratedParams = null;
 let paramsUpdateTimer = null;
-let baseGeneratedParams = null;
 function fallbackParseText(text) {
     const lower = text.toLowerCase().replace(/ё/g, 'е');
 
@@ -164,6 +163,7 @@ function setupParamsPanel() {
     bindParamRange('heightScaleInput', 'heightScaleValue');
     bindParamRange('roughnessInput', 'roughnessValue');
     bindParamRange('treeDensityInput', 'treeDensityValue');
+    bindParamRange('riverWidthInput', 'riverWidthValue');
     bindParamRange('mountainCountInput', 'mountainCountValue');
 
     if (resetBtn) resetBtn.addEventListener('click', resetManualParams);
@@ -193,32 +193,25 @@ function getManualParams() {
         height_scale: Number(document.getElementById('heightScaleInput').value),
         roughness: Number(document.getElementById('roughnessInput').value),
         tree_density: Number(document.getElementById('treeDensityInput').value),
+        river_width: Number(document.getElementById('riverWidthInput').value),
         mountain_count: Number(document.getElementById('mountainCountInput').value)
     };
 }
 
 function updateGeneratedTerrainFromPanel() {
-    if (!baseGeneratedParams) {
+    if (!lastGeneratedParams) {
         console.warn('Сначала нужно сгенерировать ландшафт');
         return;
     }
 
     const manual = getManualParams();
-    const nextParams = { ...baseGeneratedParams };
 
-    if (manual.height_scale > 0) nextParams.height_scale = manual.height_scale;
-    if (manual.roughness > 0) nextParams.roughness = manual.roughness;
-
-    if (manual.tree_density > 0) {
-        nextParams.tree_density = manual.tree_density;
-        nextParams.hasTrees = true;
-    }
-
-    if (manual.mountain_count > 0 && nextParams.type === 'mountains') {
-        nextParams.mountain_count = manual.mountain_count;
-    }
-
-    lastGeneratedParams = nextParams;
+    lastGeneratedParams.height_scale = manual.height_scale;
+    lastGeneratedParams.roughness = manual.roughness;
+    lastGeneratedParams.tree_density = manual.tree_density;
+    lastGeneratedParams.river_width = manual.river_width;
+    lastGeneratedParams.mountain_count = manual.mountain_count;
+    lastGeneratedParams.hasTrees = manual.tree_density > 0;
 
     clearTimeout(paramsUpdateTimer);
 
@@ -228,10 +221,11 @@ function updateGeneratedTerrainFromPanel() {
 }
 
 function resetManualParams() {
-    setRangeValue('heightScaleInput', 'heightScaleValue', 0);
-    setRangeValue('roughnessInput', 'roughnessValue', 0);
-    setRangeValue('treeDensityInput', 'treeDensityValue', 0);
-    setRangeValue('mountainCountInput', 'mountainCountValue', 0);
+    setRangeValue('heightScaleInput', 'heightScaleValue', 1.0);
+    setRangeValue('roughnessInput', 'roughnessValue', 0.6);
+    setRangeValue('treeDensityInput', 'treeDensityValue', 0.5);
+    setRangeValue('riverWidthInput', 'riverWidthValue', 17);
+    setRangeValue('mountainCountInput', 'mountainCountValue', 1);
 
     updateGeneratedTerrainFromPanel();
 }
@@ -256,19 +250,6 @@ function setRangeValue(inputId, valueId, value) {
     label.textContent = value;
 }
 
-function updateParamsPanelFromGeneratedParams(params) {
-    if (!params) return;
-
-    const heightScale = params.height_scale !== undefined ? Number(params.height_scale).toFixed(1) : 0;
-    const roughness = params.roughness !== undefined ? Number(params.roughness).toFixed(2) : 0;
-    const treeDensity = params.hasTrees ? Number(params.tree_density || 0).toFixed(2) : 0;
-    const mountainCount = params.type === 'mountains' || params.type === 'volcano' ? Number(params.mountain_count || 1) : 0;
-
-    setRangeValue('heightScaleInput', 'heightScaleValue', heightScale);
-    setRangeValue('roughnessInput', 'roughnessValue', roughness);
-    setRangeValue('treeDensityInput', 'treeDensityValue', treeDensity);
-    setRangeValue('mountainCountInput', 'mountainCountValue', mountainCount);
-}
 
 // ГЕНЕРАЦИЯ ПО ТЕКСТУ
 async function generateTerrainFromText() {
@@ -289,7 +270,7 @@ async function generateTerrainFromText() {
     statusDiv.textContent = 'Генерация сцены...';
 
     try {
-        const response = await fetch('/api/parse', {
+        const response = await fetch('http://localhost:5000/api/parse', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text })
@@ -327,9 +308,7 @@ async function generateTerrainFromText() {
 
         console.log('FINAL PARAMS:', finalParams);
 
-        baseGeneratedParams = { ...finalParams };
         lastGeneratedParams = { ...finalParams };
-        updateParamsPanelFromGeneratedParams(lastGeneratedParams);
         generateTerrain(lastGeneratedParams);
 
         statusDiv.textContent = 'Готово!';
@@ -368,9 +347,6 @@ async function generateTerrainFromText() {
 
         console.log('FALLBACK PARAMS:', lastGeneratedParams);
 
-        baseGeneratedParams = { ...finalParams };
-        lastGeneratedParams = { ...finalParams };
-        updateParamsPanelFromGeneratedParams(lastGeneratedParams);
         generateTerrain(lastGeneratedParams);
 
         setTimeout(() => {
@@ -394,10 +370,10 @@ function clearScene() {
     removeWater();
     removeRiver();
     removeTrees();
-
+    removeFlowers();
 
     lastGeneratedParams = null;
-    baseGeneratedParams = null;
+
     const geometry = new THREE.PlaneGeometry(180, 180, 50, 50);
     geometry.rotateX(-Math.PI / 2);
 

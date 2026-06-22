@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: terrain_backend
+    restart: always
+    environment:
+      - GEMINI_API_KEY=AQ.Ab8RN6KXBP3xI8sg38ESnOlPKr3JQGsN2uv5pP2CF0GFiO60Qw
+      - DB_PATH=/app/data/users.db
+    volumes:
+      - db_data:/app/data
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: terrain_frontend
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

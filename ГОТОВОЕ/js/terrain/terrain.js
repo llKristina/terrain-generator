@@ -337,6 +337,10 @@ function generateTerrain(params) {
         removeTrees();
     }
 
+    if (typeof removeFlowers === 'function') {
+        removeFlowers();
+    }
+
     if (oasisGrassGroup) {
         scene.remove(oasisGrassGroup);
         oasisGrassGroup = null;
@@ -449,6 +453,11 @@ carveRiverIntoHeightMap(heightMap, riverDataGlobal, half, step);
                 y =applyLakeToHeightmap(x,z,y,lakeDataGlobal);
             }
 
+            if (riverDataGlobal) {
+
+                y =applyRiverToHeightmap(x,z,y,riverDataGlobal);
+            }
+
             heightMap[i][j] = y;
 
             vertices.push(x, y,z );
@@ -511,7 +520,7 @@ if (riverDataGlobal && !lakeDataGlobal) {
     }
 
     else {
-        river =addRiver(riverDataGlobal);
+        river =addRiver(riverDataGloba);
     }
 
     if (river) {

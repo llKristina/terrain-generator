@@ -102,7 +102,9 @@ function createEmptyPlane() {
     if (typeof removeTrees ==='function') {
         removeTrees();
     }
-    
+    if ( typeof removeFlowers ==='function') {
+        removeFlowers();
+    }
 
     const geometry =new THREE.PlaneGeometry( 280, 280, 64, 64);
     geometry.rotateX( -Math.PI / 2);

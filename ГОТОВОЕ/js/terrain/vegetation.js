@@ -128,24 +128,34 @@ function addTrees(heightMap, type, step, half, density) {
     let count = 0;
     while (count < maxTrees) {
 
+        // Случайная ячейка
         const i = Math.floor(Math.random() * segments);
         const j = Math.floor(Math.random() * segments);
+        // Случайное смещение внутри ячейки
         const offsetX = (Math.random() - 0.5) * step;
         const offsetZ = (Math.random() - 0.5) * step;
+        // Мировые координаты X/Z
         const x = -half + j * step + offsetX;
         const z = -half + i * step + offsetZ;
+        // Получаем корректную Y из heightMap после смещения
         const y = getMapHeight(heightMap, x, z, half, step);
+        // Проверка на воду
         if (isInsideLake(x, z) || isInsideRiver(x, z)) continue;
+        // Проверка на высоту 
         if (y > 18 || y < 2) continue;
+        // Проверка лесной маски
         const forestNoise = getForestDensity(x, z);
         if (forestNoise < 0.3) continue;
+        // Случайная модель дерева
         const randomTree = treeModels[Math.floor(Math.random() * treeModels.length)];
         const tree = randomTree.clone(true);
+        // Масштаб и поворот
         const scale = 0.045 + Math.random() * 0.06;
         tree.scale.set(scale, scale, scale);
         tree.rotation.y = Math.random() * Math.PI * 2;
         tree.rotation.z = (Math.random() - 0.5) * 0.05;
-        tree.position.set(x, y + 0.05, z); 
+        // Ключевой момент: позиция Y точно по рельефу
+        tree.position.set(x, y + 0.05, z); // маленький offset, чтобы не зарывался в землю
         tree.traverse(child => {
             if (child.isMesh) {
                 child.castShadow = true;

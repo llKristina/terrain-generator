@@ -1,4 +1,4 @@
-const API_URL = '';
+const API_URL = 'http://localhost:5000';
 
 function getToken() {
     return localStorage.getItem('token');
@@ -120,15 +120,9 @@ async function loginUser() {
 
         const result = await response.json();
 
-        if (response.ok && result.token) {
+        if (result.success) {
             setToken(result.token);
-
-            const user = result.user || {
-                username: username,
-                email: email
-            };
-
-            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('user', JSON.stringify(result.user));
             authStatus.textContent = '';
             showAppPage();
         } else {

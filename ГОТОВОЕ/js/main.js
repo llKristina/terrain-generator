@@ -16,6 +16,8 @@ function init() {
 
     // UI
     if (typeof setupUI === 'function') {setupUI(); }
+    if (typeof setupUI === 'function') setupUI();
+    if (typeof setupAuth === 'function') setupAuth();
     if (typeof setupParamsPanel === 'function') setupParamsPanel();
 
     // Ресайз

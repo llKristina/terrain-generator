@@ -9,9 +9,6 @@ import jwt
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from openai import OpenAI
-import os
-
-DB_PATH = os.getenv("DB_PATH", "users.db")
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +16,7 @@ CORS(app)
 SECRET_KEY = "secret_key"
 
 def init_db():
-    sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -37,30 +34,42 @@ def init_db():
 
 init_db()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# ==========================================
+# GEMINI API (ЗАМЕНА OLLAMA)
+# ==========================================
 
+GROQ_API_KEY = "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"
+
+# Инициализируем клиент и перенаправляем его на серверы Groq
 client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
     api_key=GROQ_API_KEY
 )
 
-def call_gemini(prompt): 
+def call_gemini(prompt):  # Название функции оставил старым, чтобы не переписывать /api/parse
     try:
         response = client.chat.completions.create(
+            # llama-3.1-8b-instant — самая быстрая и стабильная бесплатная модель на Groq
             model="llama-3.1-8b-instant", 
             messages=[
                 {"role": "user", "content": prompt}
             ],
+            # Эта настройка жестко заставляет модель отдавать только валидный JSON объект
             response_format={"type": "json_object"},
-            temperature=0.1, 
+            temperature=0.1, # Низкая температура, чтобы параметры были точными и не "галлюцинировали"
             timeout=30
         )
         
+        # Получаем чистый текстовый ответ (там гарантированно будет только JSON строка)
         return response.choices[0].message.content
 
     except Exception as e:
         print("Groq API exception:", e)
         return ""
+
+# ==========================================
+# SMART FALLBACK
+# ==========================================
 
 def fallback_params(text_lower):
     return {
@@ -78,11 +87,17 @@ def fallback_params(text_lower):
         "biome": "plains"
     }
 
+# ==========================================
+# RANDOM VARIATION
+# ==========================================
 
 def vary(value, min_v, max_v, factor=0.1):
     value = value * (1 + (random.random() - 0.5) * factor * 2)
     return max(min_v, min(max_v, value))
 
+# ==========================================
+# PARSE API
+# ==========================================
 
 @app.route('/api/parse', methods=['POST'])
 def parse_text():
@@ -98,21 +113,8 @@ def parse_text():
 - понять смысл текстового запроса пользователя;
 - определить подходящий тип ландшафта;
 - подобрать реалистичные параметры генерации;
-- вернуть ТОЛЬКО один корректный JSON. не оборачивай его в массив;
+- вернуть ТОЛЬКО корректный JSON;
 - НЕ писать пояснения, markdown, комментарии или текст вне JSON.
-
-Если в запросе пользователя одновременно присутствуют возвышенности (горы, холмы, вулкан) и вода (река, озеро), ты ОБЯЗАН добавить в JSON-ответ поле "layoutHints". В этом поле ты должен развести их в разные стороны карты, чтобы они не пересекались.
-
-Пример структуры "layoutHints":
-"layoutHints": {{
-    "mountain": {{ "x": "left", "z": "back" }},
-    "river": {{ "x": "right", "z": "front" }}
-}}
-
-Допустимые значения для "x": "left", "right", ""
-Допустимые значения для "z": "back", "front", ""
-
-Никогда не помещай реку ("river") и гору ("mountain") в одни и те же координаты (например, "left" и "back" одновременно для обоих объектов ЗАПРЕЩЕНЫ).
 
 ==================================================
 ДОСТУПНЫЕ ТИПЫ ЛАНДШАФТА
@@ -329,7 +331,6 @@ octaves:
 
 Озёра и реки требуют более плавного рельефа.
 
-
 ==================================================
 ПРИМЕРЫ
 ==================================================
@@ -346,6 +347,10 @@ octaves:
         print("Using fallback (empty Gemini response)")
         return jsonify(fallback_params(text_lower))
 
+    # ==========================================
+    # 2. JSON EXTRACTION
+    # ==========================================
+
     try:
         match = re.search(r'\{[\s\S]*\}', answer)
 
@@ -357,6 +362,10 @@ octaves:
     except Exception as e:
         print("JSON error:", e)
         return jsonify(fallback_params(text_lower))
+
+    # ==========================================
+    # 3. SAFETY FIXES (логика твоего проекта)
+    # ==========================================
 
     if 'гор' in text_lower or 'mountain' in text_lower:
         params["type"] = "mountains"
@@ -376,6 +385,10 @@ octaves:
     if 'озер' in text_lower or 'река' in text_lower:
         params["hasWater"] = True
 
+    # ==========================================
+    # 4. STABILIZATION (ВАЖНО)
+    # ==========================================
+
     params["height_scale"] = vary(params.get("height_scale", 0.7), 0.3, 1.5, 0.12)
     params["roughness"] = vary(params.get("roughness", 0.5), 0.2, 1.3, 0.12)
     params["frequency"] = vary(params.get("frequency", 0.04), 0.01, 0.09, 0.1)
@@ -385,7 +398,11 @@ octaves:
     print("FINAL:", params)
 
     return jsonify(params)
-    
+
+# ==========================================
+# AUTH ROUTES (без изменений)
+# ==========================================
+
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -401,7 +418,7 @@ def register():
     created_at = datetime.datetime.now().isoformat()
 
     try:
-        sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect("users.db")
         cursor = conn.cursor()
 
         cursor.execute(
@@ -425,7 +442,7 @@ def login():
     login_value = data.get('login', '')
     password = data.get('password', '')
 
-    sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
 
     cursor.execute(
@@ -437,16 +454,10 @@ def login():
     conn.close()
 
     if not user:
-        return jsonify({
-            "success": False,
-            "message": "Пользователь не найден"
-        }), 401
+        return jsonify({'success': False}), 404
 
     if not check_password_hash(user[3], password):
-        return jsonify({
-            "success": False,
-            "message": "Неверный пароль"
-        }), 401
+        return jsonify({'success': False}), 401
 
     token = jwt.encode(
         {
@@ -457,15 +468,7 @@ def login():
         algorithm="HS256"
     )
 
-    return jsonify({
-    "success": True,
-    "token": token,
-    "user": {
-        "id": user[0],
-        "username": user[1],
-        "email": user[2]
-    }
-})
+    return jsonify({"token": token})
 
 
 if __name__ == '__main__':

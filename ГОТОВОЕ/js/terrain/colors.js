@@ -6,8 +6,11 @@ const snowTexture    = textureLoader.load('textures/snow.jpg');
 const sandTexture    = textureLoader.load('textures/sand.jpg');
 const canyonTexture1 = textureLoader.load('textures/can1.jpg');
 const canyonTexture2 = textureLoader.load('textures/can2.jpg');
-const volcanoTexture = textureLoader.load('textures/volcano.jpg');   
+const volcanoTexture = textureLoader.load('textures/volcano.jpg');   // ← Добавлено
 
+// ============================================
+// TEXTURE SETTINGS
+// ============================================
 
 [
     grassTexture,
@@ -24,6 +27,10 @@ const volcanoTexture = textureLoader.load('textures/volcano.jpg');
     texture.colorSpace = THREE.SRGBColorSpace;
 });
 
+// ============================================
+// TEXTURE SCALE
+// ============================================
+
 grassTexture.repeat.set(90, 90);
 rockTexture.repeat.set(70, 70);
 snowTexture.repeat.set(60, 60);
@@ -31,6 +38,10 @@ sandTexture.repeat.set(35, 35);
 canyonTexture1.repeat.set(45, 45);
 canyonTexture2.repeat.set(55, 55);
 volcanoTexture.repeat.set(38, 38);        
+
+// ============================================
+// HELPERS
+// ============================================
 
 function addNoiseToColor(color, noise, ao = 1, saturationVar = 0) {
     if (!noise) noise = 0;
@@ -42,6 +53,10 @@ function addNoiseToColor(color, noise, ao = 1, saturationVar = 0) {
 
     return new THREE.Color(r, g, b);
 }
+
+// ============================================
+// COLOR FUNCTION
+// ============================================
 
 function getTerrainColor(y, type, x = 0, z = 0) {
     const macroNoise = perlin ? perlin.noise2D(x * 0.012, z * 0.012) * 0.14 : 0;
@@ -57,22 +72,22 @@ function getTerrainColor(y, type, x = 0, z = 0) {
 
     if (type === 'canyon') {
     if (y > 20) 
-        return addNoiseToColor(new THREE.Color(0xFBEBC1), totalNoise, ambientOcclusion); 
+        return addNoiseToColor(new THREE.Color(0xFBEBC1), totalNoise, ambientOcclusion); // очень светлые вершины (ближе к песочно-розовому)
     if (y > 10) 
-        return addNoiseToColor(new THREE.Color(0xF5DBA7), totalNoise, ambientOcclusion); 
+        return addNoiseToColor(new THREE.Color(0xF5DBA7), totalNoise, ambientOcclusion); // тёплые средние стены (песочный с золотистым отливом)
     if (y > 4) 
-        return addNoiseToColor(new THREE.Color(0xE6C09C), totalNoise, ambientOcclusion); 
-    return addNoiseToColor(new THREE.Color(0xCBA888), totalNoise, ambientOcclusion); 
+        return addNoiseToColor(new THREE.Color(0xE6C09C), totalNoise, ambientOcclusion); // светлые нижние склоны (бежевый с коричневым)
+    return addNoiseToColor(new THREE.Color(0xCBA888), totalNoise, ambientOcclusion); // дно каньона — уже не тёмное, а приглушённо-коричневое
 }
 
 
 
     if (type === 'mountains' || type === 'volcano') {
     if (type === 'volcano') {
-        if (y > 70) return addNoiseToColor(new THREE.Color(0x555555), totalNoise * 0.25, ambientOcclusion); 
-        if (y > 40) return addNoiseToColor(new THREE.Color(0x665544), totalNoise * 0.35, ambientOcclusion); 
-        if (y > 10) return addNoiseToColor(new THREE.Color(0x776655), totalNoise, ambientOcclusion);        
-        return addNoiseToColor(new THREE.Color(0x887766), totalNoise, ambientOcclusion);                   
+        if (y > 70) return addNoiseToColor(new THREE.Color(0x555555), totalNoise * 0.25, ambientOcclusion); // тёмно-серый (вершина, застывшая лава)
+        if (y > 40) return addNoiseToColor(new THREE.Color(0x665544), totalNoise * 0.35, ambientOcclusion); // коричнево-серый (средние склоны, вулканическая порода)
+        if (y > 10) return addNoiseToColor(new THREE.Color(0x776655), totalNoise, ambientOcclusion);        // тёплый серый (нижние склоны)
+        return addNoiseToColor(new THREE.Color(0x887766), totalNoise, ambientOcclusion);                    // подножие (более светлый базальт)
         }
 
     
@@ -85,6 +100,10 @@ function getTerrainColor(y, type, x = 0, z = 0) {
     return addNoiseToColor(new THREE.Color(0x496437), totalNoise, ambientOcclusion);
 
 }
+
+// ============================================
+// WATER MATERIALS
+// ============================================
 
 function getWaterMaterial(opacity = 0.82) {
     return new THREE.MeshPhysicalMaterial({
@@ -115,6 +134,10 @@ function getWaterShineMaterial() {
         emissiveIntensity: 0.15
     });
 }
+
+// ============================================
+// TERRAIN MATERIAL
+// ============================================
 
 function getTerrainMaterial() {
 
@@ -148,6 +171,9 @@ function getTerrainMaterial() {
 
     material.onBeforeCompile = function(shader) {
 
+        // ====================================
+        // UNIFORMS
+        // ====================================
         shader.uniforms.rockTexture    = { value: rockTexture };
         shader.uniforms.snowTexture    = { value: snowTexture };
         shader.uniforms.sandTexture    = { value: sandTexture };
@@ -156,6 +182,9 @@ function getTerrainMaterial() {
         shader.uniforms.volcanoTexture = { value: volcanoTexture };   
         shader.uniforms.currentTerrainType = { value: terrainType };
 
+        // ====================================
+        // VERTEX SHADER
+        // ====================================
         shader.vertexShader =
             `
             varying vec3 vWorldPosition;
@@ -170,7 +199,9 @@ function getTerrainMaterial() {
                 `
             );
 
-
+        // ====================================
+        // FRAGMENT SHADER
+        // ====================================
         shader.fragmentShader =
             `
             uniform sampler2D rockTexture;
@@ -204,42 +235,69 @@ function getTerrainMaterial() {
 
                 vec4 terrainColor;
 
-                //  ВУЛКАН 
+                // ====================== ВУЛКАН ======================
+                // ====================== ВУЛКАН ======================
                 if (currentTerrainType == 4) {
+                    // Высота: чем выше, тем больше вулканической породы
                     float h = smoothstep(0.0, 65.0, vWorldPosition.y);
 
+                    // Крутизна склонов
                     float s = smoothstep(0.18, 0.75, slope);
 
-                    vec4 ashBase = vec4(0.30, 0.29, 0.26, 1.0);     
-                    vec4 darkRock = vec4(0.16, 0.15, 0.14, 1.0);     
-                    vec4 midRock = vec4(0.38, 0.35, 0.31, 1.0);     
-                    vec4 craterRock = vec4(0.08, 0.08, 0.08, 1.0);   
+                    // Базовые серые цвета для вулканического ландшафта
+                    vec4 ashBase = vec4(0.30, 0.29, 0.26, 1.0);      // пепельно-серая земля
+                    vec4 darkRock = vec4(0.16, 0.15, 0.14, 1.0);     // тёмная вулканическая порода
+                    vec4 midRock = vec4(0.38, 0.35, 0.31, 1.0);      // серо-коричневые склоны
+                    vec4 craterRock = vec4(0.08, 0.08, 0.08, 1.0);   // почти чёрная вершина/кратер
+
+                    // Текстурные детали
                     vec4 rockDetail = rockColor;
                     vec4 volcanoDetail = volcanoColor;
+
+                    // Основной цвет: снизу пепельный, выше серо-коричневый
                     vec4 baseMix = mix(ashBase, midRock, h * 0.75);
+
+                    // На крутых местах добавляем тёмные скалы
                     baseMix = mix(baseMix, darkRock, s * 0.55);
+
+                    // Добавляем текстуру камня, но не делаем её зелёной
                     baseMix = mix(baseMix, rockDetail, s * 0.25);
+
+                    // На верхней части вулкана делаем цвет темнее
                     float topDark = smoothstep(45.0, 85.0, vWorldPosition.y);
                     baseMix = mix(baseMix, craterRock, topDark * 0.45);
+
+                    // Немного вулканической текстуры
                     baseMix = mix(baseMix, volcanoDetail, h * 0.18);
 
                     terrainColor = baseMix;
                 }
 
+                // ====================================
+                // ПУСТЫНЯ / ПЛЯЖ
+                // ====================================
                 else if (currentTerrainType == 1) {
                     terrainColor = mix(sandColor, rockColor, rockFactor * 0.04);
                 }
 
+                // ====================================
+                // КАНЬОН
+                // ====================================
                 else if (currentTerrainType == 2) {
                     terrainColor = mix(canyonColor1, canyonColor2, slope * 0.7);
                 }
 
-
+                // ====================================
+                // ОБЫЧНЫЕ ГОРЫ
+                // ====================================
                 else if (currentTerrainType == 3) {
                     terrainColor = mix(grassColor, rockColor, rockFactor);
                     terrainColor = mix(terrainColor, snowColor, snowFactor);
                 }
 
+                // ====================================
+                // ПО УМОЛЧАНИЮ
+                // ====================================
                 else {
                     terrainColor = mix(grassColor, rockColor, rockFactor * 0.25);
                 }
@@ -251,6 +309,9 @@ function getTerrainMaterial() {
 
     return material; 
 }
+ // ============================================
+// WATER SHADER MATERIALS
+// ============================================
 
 function createWaterMaterial(lakeData = null) {
     const isOasis = lakeData && lakeData.isOasis;
@@ -306,31 +367,46 @@ function createWaterMaterial(lakeData = null) {
 
             void main() {
                 vec2 p = vWorldPos.xz;
+
+                // Обычное озеро — темнее
                 vec3 lakeBase = vec3(0.06, 0.25, 0.34);
+
+                // Оазис — почти прозрачная вода с лёгким голубым оттенком
                 vec3 oasisBase = vec3(0.52, 0.76, 0.70);
+
                 vec3 baseColor = mix(lakeBase, oasisBase, isOasis);
                 vec3 color = baseColor;
+
+                // Мелкая статичная рябь, без анимации
                 float wave1 = sin(p.x * 1.15 + p.y * 0.55) * 0.5 + 0.5;
                 float wave2 = sin(p.x * 0.75 - p.y * 1.05) * 0.5 + 0.5;
                 float wave3 = fbm(p * 0.18);
+
                 float waves = wave1 * 0.28 + wave2 * 0.22 + wave3 * 0.50;
+
+                // Очень слабое изменение цвета от волн
                 color += vec3(0.010, 0.018, 0.020) * (waves - 0.5);
+
+                // Мягкие блики пятнами
                 float glintNoise = fbm(p * 0.13 + vec2(24.7, 11.3));
                 float glint = smoothstep(0.70, 0.88, glintNoise);
 
                 color += vec3(0.75, 0.92, 0.95) * glint * 0.12;
 
+                // Мелкие светлые блики
                 float smallGlint = fbm(p * 0.32 + vec2(71.2, 35.6));
                 smallGlint = smoothstep(0.80, 0.96, smallGlint);
 
                 color += vec3(0.90, 1.00, 0.98) * smallGlint * 0.06;
 
+                // Для оазиса чуть осветляем, но не делаем кислотно-голубым
                 if (isOasis > 0.5) {
                     color = mix(color, vec3(0.62, 0.86, 0.80), 0.18);
                 }
 
                 color = clamp(color, 0.0, 1.0);
 
+                // Оазис делаем прозрачнее, обычное озеро плотнее
                 float alpha = mix(0.88, 0.62, isOasis);
 
                 gl_FragColor = vec4(color, alpha);

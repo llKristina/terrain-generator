@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir flask flask-cors requests pyjwt werkzeug gunicorn
+
+COPY ai_server.py .
+
+RUN mkdir -p /app/data
+
+EXPOSE 5000
+
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "ai_server:app"]
