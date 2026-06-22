@@ -121,12 +121,11 @@ async function loginUser() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username,
-                email,
-                password
-            })
-        });
-
+            login: username,
+            email: email,
+            password: password
+        })
+});
         const result = await response.json();
 
         if (response.ok && result.token) {
