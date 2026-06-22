@@ -291,10 +291,7 @@ async function generateTerrainFromText() {
     try {
         const response = await fetch('/api/parse', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('token') // Добавили авторизацию
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text })
         });
 
@@ -303,11 +300,7 @@ async function generateTerrainFromText() {
         }
 
         const aiParams = await response.json();
-        console.log('Сырой ответ от сервера:', aiParams);
-
-        if (!aiParams || aiParams.success === false) {
-            throw new Error(aiParams.message || 'Сервер вернул некорректную структуру');
-        }
+        console.log('Параметры от ИИ:', aiParams);
 
         statusDiv.textContent = 'Генерация ландшафта...';
 
@@ -375,7 +368,8 @@ async function generateTerrainFromText() {
 
         console.log('FALLBACK PARAMS:', lastGeneratedParams);
 
-        baseGeneratedParams = { ...lastGeneratedParams };
+        baseGeneratedParams = { ...finalParams };
+        lastGeneratedParams = { ...finalParams };
         updateParamsPanelFromGeneratedParams(lastGeneratedParams);
         generateTerrain(lastGeneratedParams);
 
