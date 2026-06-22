@@ -44,22 +44,30 @@ def init_db():
 
 init_db()
 
-def call_groq(prompt): 
+def call_groq(prompt):
     try:
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            response_format={"type": "json_object"},
             temperature=0.1,
-            timeout=30
+            response_format={"type": "json_object"}
         )
 
-        return response.choices[0].message.content
+        print("GROQ RAW RESPONSE:", response)
+
+        if not response.choices:
+            print("EMPTY CHOICES")
+            return ""
+
+        content = response.choices[0].message.content
+        print("GROQ CONTENT:", content)
+
+        return content
 
     except Exception as e:
-        print("Groq API exception:", e)
+        print("GROQ ERROR:", repr(e))
         return ""
 
 def fallback_params(text_lower):
@@ -340,22 +348,20 @@ octaves:
 """
 
     answer = call_groq(prompt)
-    print("AI ответ:", answer[:500])
 
-    if not answer or len(answer.strip()) < 10:
+    print("AI ответ:", answer)
+
+    if not answer:
         print("Using fallback (empty Groq response)")
         return jsonify(fallback_params(text_lower))
 
     try:
-        match = re.search(r'\{[\s\S]*\}', answer)
-
-        if not match:
-            return jsonify(fallback_params(text_lower))
-
-        params = json.loads(match.group(0))
+        result = json.loads(answer)
+        return jsonify(result)
 
     except Exception as e:
-        print("JSON error:", e)
+        print("JSON parse error:", e)
+        print("Raw answer:", answer)
         return jsonify(fallback_params(text_lower))
 
     if 'гор' in text_lower or 'mountain' in text_lower:
