@@ -492,5 +492,5 @@ function setupUI() {
 window.setupUI = setupUI;
 window.setupParamsPanel = setupParamsPanel;
 window.generateTerrainFromText = generateTerrainFromText;
-window.clearScene = clearScene;
 window.exportToOBJ = exportToOBJ;
+window.clearScene = clearScene;
