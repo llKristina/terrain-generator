@@ -254,6 +254,10 @@ def parse_text():
 
     return jsonify(params)
 
+def is_valid_email(email):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email) is not None
+
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -261,6 +265,12 @@ def register():
     username = data.get('username', '').strip()
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
+    if not is_valid_email(email):
+    return jsonify({
+        "success": False,
+        "message": "Некорректный email"
+    }), 400
+    
 
     if not username or not email or not password:
         return jsonify({'success': False, 'message': 'Заполните все поля'}), 400
