@@ -454,36 +454,74 @@ function downloadFile(content, fileName, contentType) {
 }
 
 function exportToOBJ() {
-    if (!scene) {
+    if (!window.scene) {
         showStatus('Ошибка: сцена не найдена');
         return;
     }
 
     showStatus('Экспорт всего мира в OBJ...');
 
-    const internalDownload = (content, fileName, contentType) => {
-        const a = document.createElement("a");
-        const file = new Blob([content], { type: contentType });
-        a.href = URL.createObjectURL(file);
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(a.href);
-    };
+    const outputChunks = [];
+    let vertexCount = 0;
+
+    window.scene.traverse(function (object) {
+        if (object.isMesh) {
+            const geometry = object.geometry;
+            
+            if (!geometry || !geometry.attributes.position) return;
+
+            const positionAttribute = geometry.attributes.position;
+            const indexAttribute = geometry.index;
+            
+            object.updateMatrixWorld(true);
+            const matrix = object.matrixWorld;
+
+            outputChunks.push(`# Object: ${object.name || 'Mesh'}\n`);
+
+            const tempVertex = new THREE.Vector3();
+            for (let i = 0; i < positionAttribute.count; i++) {
+                tempVertex.fromBufferAttribute(positionAttribute, i);
+                tempVertex.applyMatrix4(matrix); 
+                outputChunks.push(`v ${tempVertex.x.toFixed(4)} ${tempVertex.y.toFixed(4)} ${tempVertex.z.toFixed(4)}\n`);
+            }
+
+            if (indexAttribute) {
+                for (let i = 0; i < indexAttribute.count; i += 3) {
+                    const v1 = indexAttribute.getX(i) + 1 + vertexCount;
+                    const v2 = indexAttribute.getY(i) + 1 + vertexCount;
+                    const v3 = indexAttribute.getZ(i) + 1 + vertexCount;
+                    outputChunks.push(`f ${v1} ${v2} ${v3}\n`);
+                }
+            } else {
+                for (let i = 0; i < positionAttribute.count; i += 3) {
+                    const v1 = i + 1 + vertexCount;
+                    const v2 = i + 2 + vertexCount;
+                    const v3 = i + 3 + vertexCount;
+                    outputChunks.push(`f ${v1} ${v2} ${v3}\n`);
+                }
+            }
+
+            vertexCount += positionAttribute.count;
+        }
+    });
+
+    if (outputChunks.length === 0) {
+        showStatus('Ошибка: нечего экспортировать');
+        return;
+    }
 
     try {
-        if (typeof THREE.OBJExporter === 'undefined') {
-            showStatus('Ошибка: THREE.OBJExporter не подключен в HTML!', true);
-            return;
-        }
-
-        const exporter = new THREE.OBJExporter();
-        const objContent = exporter.parse(scene);
-
-        internalDownload(objContent, `full_world_${Date.now()}.obj`, 'text/plain');
-        showStatus('Полная модель мира сохранена!');
+        const file = new Blob(outputChunks, { type: 'text/plain' });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(file);
+        a.download = `full_world_${Date.now()}.obj`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        
+        showStatus('Полная OBJ модель успешно сохранена!');
     } catch (err) {
         console.error(err);
-        showStatus('Ошибка при экспорте модели!', true);
+        showStatus('Ошибка при записи файла!', true);
     }
 }
 
