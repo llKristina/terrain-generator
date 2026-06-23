@@ -1,6 +1,8 @@
 html, body {
     width: 100%;
-    overflow-x: hidden;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
 }
 
 * {
@@ -8,80 +10,84 @@ html, body {
 }
 
 body {
-    margin: 0;
-    overflow: hidden;
-    touch-action: none;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    touch-action: none;
 }
 
+
 #info {
-    position: absolute;
-    top: 20px;
-    left: 20px;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+
     color: white;
     background: rgba(0,0,0,0.7);
-    padding: 12px 20px;
+    padding: 10px 14px;
     border-radius: 8px;
-    z-index: 100;
-    font-size: 14px;
+
+    z-index: 1000;
+    font-size: 13px;
     pointer-events: none;
     backdrop-filter: blur(5px);
 }
 
+
 #controls {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.85);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    width: 100%;
+    padding: 10px;
+
+    background: rgba(0,0,0,0.92);
     backdrop-filter: blur(10px);
-    padding: 15px;
-    border-radius: 12px;
-    color: white;
-    z-index: 100;
+
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+
+    z-index: 1000;
 }
 
+
 textarea {
-    flex: 1;
+    width: 100%;
     padding: 12px;
     border-radius: 8px;
     border: none;
+
     background: rgba(255,255,255,0.15);
     color: white;
-    font-family: inherit;
+
     font-size: 14px;
-    resize: vertical;
-    min-width: 0;
-    width: 100%;
+    resize: none;
 }
 
 textarea:focus {
     outline: none;
-    background: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.22);
 }
 
-textarea::placeholder {
-    color: rgba(255,255,255,0.6);
-}
 
 button {
-    padding: 12px 24px;
-    background: #4CAF50;
+    width: 100%;
+    padding: 12px;
     border: none;
     border-radius: 8px;
-    color: white;
-    cursor: pointer;
+
     font-weight: bold;
     font-size: 14px;
-    transition: transform 0.1s, background 0.2s;
+
+    color: white;
+    cursor: pointer;
+
+    transition: 0.15s;
 }
 
 button:hover {
-    background: #45a049;
     transform: scale(1.02);
 }
 
@@ -89,362 +95,87 @@ button:active {
     transform: scale(0.98);
 }
 
+button {
+    background: #4CAF50;
+}
+
 .clear-btn {
     background: #ff4444;
 }
 
-.clear-btn:hover {
-    background: #cc0000;
+#randomParamsBtn {
+    background: #FF9800;
 }
 
-.status {
-    font-size: 12px;
-    color: #4CAF50;
-    margin-left: auto;
-}
-
-.examples {
-    font-size: 11px;
-    color: rgba(255,255,255,0.5);
-    margin-left: 10px;
-}
-
-@media (max-width: 768px) {
-
-    body {
-        padding: 10px;
-        overflow-x: hidden;
-    }
-
-   #controls {
-    position: absolute;
-    bottom: 20px;
-    left: 10px;
-    right: 10px;
-
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(10px);
-    padding: 12px;
-
-    border-radius: 12px;
-    color: white;
-    z-index: 100;
-
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-
-    box-sizing: border-box;
-    max-width: calc(100vw - 20px);
-}
-
-    button {
-        width: 100%;
-        font-size: 16px;
-    }
-
-    textarea {
-        width: 100%;
-        font-size: 16px;
-    }
-
-    #canvas {
-        width: 100%;
-        height: 60vh;
-    }
-
-    .panel {
-        position: static;
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    #info {
-        position: static;
-        margin: 10px;
-        font-size: 12px;
-    }
-
-    #accountPanel {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        transform: scale(0.9);
-    }
-
-    #paramsPanel {
-        position: fixed;
-        top: 70px;
-        right: 10px;
-        width: 90%;
-        max-width: 320px;
-    }
-}
 
 #authPage {
     position: fixed;
     inset: 0;
     z-index: 9999;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     background: linear-gradient(135deg, #263b7a, #0b1024);
-    font-family: Arial, sans-serif;
 }
 
 #authBox {
-    width: 390px;
-    padding: 34px;
-    background: rgba(8, 12, 25, 0.94);
+    width: 90%;
+    max-width: 380px;
+
+    padding: 28px;
+    background: rgba(8, 12, 25, 0.95);
+
     border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
     color: white;
-    text-align: center;
 }
 
-.auth-logo {
-    display: inline-block;
-    margin-bottom: 18px;
-    padding: 12px 18px;
-    background: #101827;
-    border-radius: 10px;
-    font-size: 15px;
-}
-
-#authBox h2 {
-    margin: 0 0 22px 0;
-    font-size: 28px;
-}
-
-#authBox input {
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 14px;
-    padding: 14px 15px;
-    border: none;
-    border-radius: 10px;
-    background: #2b2f3a;
-    color: white;
-    font-size: 15px;
-    outline: none;
-}
-
-#authBox input::placeholder {
-    color: #aaa;
-}
-
-.auth-main-btn {
-    width: 100%;
-    margin-top: 6px;
-    border: none;
-    border-radius: 10px;
-    padding: 14px 18px;
-    background: #43ad4d;
-    color: white;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.auth-main-btn:hover {
-    background: #4fc05a;
-}
-
-.auth-switch-text {
-    margin-top: 18px;
-    color: #cfd3dc;
-    font-size: 14px;
-}
-
-.auth-link-btn {
-    border: none;
-    background: none;
-    color: #76e181;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 0;
-    font-size: 14px;
-}
-
-.auth-link-btn:hover {
-    text-decoration: underline;
-}
-
-#authStatus {
-    min-height: 22px;
-    margin-top: 16px;
-    color: #76e181;
-    font-size: 15px;
-}
 
 #accountPanel {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    z-index: 200;
-    font-family: Arial, sans-serif;
-}
-
-#accountBtn {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 12px 16px;
-    border: none;
-    border-radius: 12px;
-    background: rgba(7, 12, 26, 0.88);
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-}
-
-#accountAvatar {
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #2d3748;
-    border-radius: 50%;
-}
-
-#accountDropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 54px;
-    width: 260px;
-    padding: 18px;
-    background: rgba(7, 12, 26, 0.95);
-    border-radius: 16px;
-    color: white;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-}
-
-#accountDropdown.active {
-    display: block;
-}
-
-.account-title {
-    margin-bottom: 14px;
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.account-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.account-row span {
-    color: #aab3c5;
-}
-
-.account-row strong {
-    max-width: 145px;
-    overflow: hidden;
-    touch-action: none;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #ffffff;
-}
-
-#accountLogoutBtn {
-    width: 100%;
-    margin-top: 12px;
-    padding: 11px 14px;
-    border: none;
-    border-radius: 10px;
-    background: #ff4444;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1100;
 }
 
 
 #paramsPanel {
-    position: absolute;
-    top: 90px;
-    right: 24px;
-    z-index: 190;
-    width: 280px;
-    font-family: Arial, sans-serif;
+    position: fixed;
+    top: 60px;
+    right: 12px;
+
+    width: 90%;
+    max-width: 300px;
+
+    z-index: 1100;
 }
 
-#paramsToggleBtn {
-    width: 100%;
-    padding: 12px 16px;
-    border: none;
-    border-radius: 12px;
-    background: rgba(7, 12, 26, 0.9);
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-}
 
-#paramsContent {
-    margin-top: 10px;
-    padding: 18px;
-    background: rgba(7, 12, 26, 0.95);
-    border-radius: 16px;
-    color: white;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-}
+@media (max-width: 768px) {
 
-#paramsContent h3 {
-    margin: 0 0 14px 0;
-    font-size: 18px;
-}
+    #info {
+        font-size: 11px;
+        padding: 8px;
+    }
 
-.param-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
-    color: #dce3f0;
-    font-size: 14px;
-}
+    #paramsPanel {
+        top: 55px;
+        right: 10px;
+        width: 92%;
+    }
 
-.param-item {
-    margin-bottom: 14px;
-}
+    #accountPanel {
+        transform: scale(0.9);
+        right: 8px;
+        top: 8px;
+    }
 
-.param-item label {
-    display: block;
-    margin-bottom: 7px;
-    font-size: 14px;
-    color: #dce3f0;
-}
+    button {
+        font-size: 15px;
+    }
 
-.param-item input[type="range"] {
-    width: 100%;
-}
-
-.params-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-}
-
-.params-buttons button {
-    flex: 1;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 10px;
-    background: #43ad4d;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-#randomParamsBtn {
-    background: #FF9800;
+    textarea {
+        font-size: 15px;
+    }
 }
