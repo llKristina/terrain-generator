@@ -444,47 +444,29 @@ function showStatus(message, isError = false) {
     }
 }
 
+function downloadFile(content, fileName, contentType) {
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href); 
+}
+
 function exportToOBJ() {
-    if (!window.currentTerrain || !window.currentTerrain.geometry) {
-        showStatus('Нет ландшафта для экспорта!');
+    if (!window.scene) {
+        showStatus('Ошибка: сцена не найдена');
         return;
     }
 
-    showStatus('Экспорт в OBJ...');
+    showStatus('Экспорт всего мира в OBJ...');
 
-    const geometry = window.currentTerrain.geometry;
-    const positionAttribute = geometry.attributes.position;
-    const indexAttribute = geometry.index;
-
-    if (!positionAttribute || !indexAttribute) {
-        showStatus('Ошибка: нет данных для экспорта');
-        return;
-    }
-
-    const vertices = positionAttribute.array;
-    const indices = indexAttribute.array;
-
-    let objContent = '';
-
-    for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const y = vertices[i + 1];
-        const z = vertices[i + 2];
-
-        objContent += `v ${x} ${y} ${z}\n`;
-    }
-
-    for (let i = 0; i < indices.length; i += 3) {
-        const v1 = indices[i] + 1;
-        const v2 = indices[i + 1] + 1;
-        const v3 = indices[i + 2] + 1;
-
-        objContent += `f ${v1} ${v2} ${v3}\n`;
-    }
+    const exporter = new THREE.OBJExporter();
+    const objContent = exporter.parse(window.scene);
 
     if (typeof downloadFile === 'function') {
-        downloadFile(objContent, `landscape_${Date.now()}.obj`, 'text/plain');
-        showStatus('OBJ файл сохранён!');
+        downloadFile(objContent, `full_world_${Date.now()}.obj`, 'text/plain');
+        showStatus('Полная модель мира сохранена!');
     } else {
         showStatus('Функция скачивания файла не найдена!', true);
     }
