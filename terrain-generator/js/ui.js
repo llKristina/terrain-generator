@@ -454,7 +454,7 @@ function downloadFile(content, fileName, contentType) {
 }
 
 function exportToOBJ() {
-    if (!window.scene) {
+    if (!scene) {
         showStatus('Ошибка: сцена не найдена');
         return;
     }
@@ -477,7 +477,7 @@ function exportToOBJ() {
         }
 
         const exporter = new THREE.OBJExporter();
-        const objContent = exporter.parse(window.scene);
+        const objContent = exporter.parse(scene);
 
         internalDownload(objContent, `full_world_${Date.now()}.obj`, 'text/plain');
         showStatus('Полная модель мира сохранена!');
