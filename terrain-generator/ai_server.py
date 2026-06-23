@@ -89,8 +89,11 @@ def call_groq(prompt):
         return ""
 
 def fallback_params(text_lower):
-    return {
+    text_lower = text_lower.lower()
+    
+    params = {
         "type": "hills",
+        "biome": "plains",
         "height_scale": 0.7,
         "roughness": 0.5,
         "octaves": 4,
@@ -100,9 +103,58 @@ def fallback_params(text_lower):
         "water_type": "none",
         "water_level": 0.0,
         "hasTrees": False,
-        "tree_density": 0.0,
-        "biome": "plains"
+        "tree_density": 0.0
     }
+
+    if any(word in text_lower for word in ['гор', 'mountain', 'peak', 'альп']):
+        params["type"] = "mountains"
+        params["biome"] = "mountains"
+        params["height_scale"] = 1.2
+        params["roughness"] = 0.85
+        params["hasTrees"] = True
+        params["tree_density"] = 0.3
+
+    elif any(word in text_lower for word in ['вулкан', 'lava', 'изверж']):
+        params["type"] = "volcano"
+        params["biome"] = "volcano"
+        params["height_scale"] = 1.25
+        params["roughness"] = 0.9
+
+    elif any(word in text_lower for word in ['пустын', 'desert', 'дюны', 'песок']):
+        params["type"] = "desert"
+        params["biome"] = "desert"
+        params["height_scale"] = 0.45
+        params["roughness"] = 0.55
+        params["hasTrees"] = False
+
+    elif any(word in text_lower for word in ['каньон', 'ущел', 'canyon']):
+        params["type"] = "canyon"
+        params["biome"] = "canyon"
+        params["height_scale"] = 0.9
+        params["roughness"] = 0.8
+        params["hasWater"] = True
+        params["water_type"] = "river"
+
+    elif any(word in text_lower for word in ['лес', 'forest', 'тайга', 'джунгл']):
+        params["type"] = "forest"
+        params["biome"] = "forest"
+        params["hasTrees"] = True
+        params["tree_density"] = 0.75
+
+    elif any(word in text_lower for word in ['озер', 'lake', 'море', 'ocean']):
+        params["hasWater"] = True
+        params["water_type"] = "lake"
+        params["water_level"] = 0.6
+
+    elif any(word in text_lower for word in ['река', 'river', 'ручей']):
+        params["hasWater"] = True
+        params["water_type"] = "river"
+
+    params["height_scale"] = vary(params["height_scale"], 0.4, 1.4, 0.15)
+    params["roughness"] = vary(params["roughness"], 0.3, 1.1, 0.12)
+    params["tree_density"] = vary(params.get("tree_density", 0.0), 0.0, 1.0, 0.1)
+
+    return params
 
 
 def vary(value, min_v, max_v, factor=0.1):
