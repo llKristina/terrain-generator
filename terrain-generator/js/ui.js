@@ -450,7 +450,7 @@ function downloadFile(content, fileName, contentType) {
     a.href = URL.createObjectURL(file);
     a.download = fileName;
     a.click();
-    URL.revokeObjectURL(a.href); 
+    URL.revokeObjectURL(a.href);
 }
 
 function exportToOBJ() {
@@ -489,3 +489,4 @@ window.setupParamsPanel = setupParamsPanel;
 window.generateTerrainFromText = generateTerrainFromText;
 window.exportToOBJ = exportToOBJ;
 window.clearScene = clearScene;
+window.downloadFile = downloadFile;
