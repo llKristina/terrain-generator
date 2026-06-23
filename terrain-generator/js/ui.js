@@ -454,7 +454,7 @@ function downloadFile(content, fileName, contentType) {
 }
 
 function exportToOBJ() {
-    if (!window.scene) {
+    if (!scene) {
         showStatus('Ошибка: сцена не найдена');
         return;
     }
@@ -464,7 +464,7 @@ function exportToOBJ() {
     const outputChunks = [];
     let vertexCount = 0;
 
-    window.scene.traverse(function (object) {
+    scene.traverse(function (object) {
         if (object.isMesh) {
             const geometry = object.geometry;
             
