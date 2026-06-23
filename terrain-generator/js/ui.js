@@ -461,14 +461,29 @@ function exportToOBJ() {
 
     showStatus('Экспорт всего мира в OBJ...');
 
-    const exporter = new THREE.OBJExporter();
-    const objContent = exporter.parse(window.scene);
+    const internalDownload = (content, fileName, contentType) => {
+        const a = document.createElement("a");
+        const file = new Blob([content], { type: contentType });
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    };
 
-    if (typeof downloadFile === 'function') {
-        downloadFile(objContent, `full_world_${Date.now()}.obj`, 'text/plain');
+    try {
+        if (typeof THREE.OBJExporter === 'undefined') {
+            showStatus('Ошибка: THREE.OBJExporter не подключен в HTML!', true);
+            return;
+        }
+
+        const exporter = new THREE.OBJExporter();
+        const objContent = exporter.parse(window.scene);
+
+        internalDownload(objContent, `full_world_${Date.now()}.obj`, 'text/plain');
         showStatus('Полная модель мира сохранена!');
-    } else {
-        showStatus('Функция скачивания файла не найдена!', true);
+    } catch (err) {
+        console.error(err);
+        showStatus('Ошибка при экспорте модели!', true);
     }
 }
 
